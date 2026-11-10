@@ -90,14 +90,21 @@
 
     let previous = 0;
     function frame(now) {
-      const dt = Math.min((now-previous)/1000,0.033);
+      const dt = Math.min((now-previous)/1000,1.0);
       previous = now;
       const target = pressed ? 1 : 0;
       const moving = Math.abs(target-amount)>0.0001 || Math.abs(velocity)>0.0001;
       if (moving) {
-        // One damped spring supplies the tiny release wobble. No physics engine.
+        // Exact damped-spring solution: the return speed does not depend on FPS.
         if (reducedMotion) { amount=target; velocity=0; }
-        else { velocity += ((target-amount)*95-velocity*14)*dt; amount += velocity*dt; }
+        else {
+          const displacement=amount-target;
+          const frequency=Math.sqrt(95-7*7);
+          const decay=Math.exp(-7*dt);
+          const cosine=Math.cos(frequency*dt), sine=Math.sin(frequency*dt);
+          amount=target+decay*(displacement*cosine+(velocity+7*displacement)/frequency*sine);
+          velocity=decay*(velocity*cosine-(7*velocity+95*displacement)/frequency*sine);
+        }
         dirty = true;
       }
       if (dirty) {
