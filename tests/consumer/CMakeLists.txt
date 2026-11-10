@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.25)
+project(consumer LANGUAGES CXX)
+find_package(tinyik CONFIG REQUIRED)
+add_executable(consumer ../../examples/arm.cpp)
+target_link_libraries(consumer PRIVATE tinyik::tinyik)

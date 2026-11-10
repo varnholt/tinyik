@@ -1,0 +1,75 @@
+name: Build and check
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        env:
+          CXX: ${{ runner.os == 'Linux' && 'g++-14' || '' }}
+      - run: cmake --build build --config Release
+      - run: ctest --test-dir build -C Release --output-on-failure
+      - run: cargo test --locked
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-parity.mjs
+      - name: Install and consume CMake package
+        run: |
+          cmake --install build --config Release --prefix "${{ github.workspace }}/build/install"
+          cmake -S tests/consumer -B build/consumer -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/install" -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/consumer --config Release
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 7.0.0
+      - name: Build C++ WebAssembly
+        run: em++ bindings/wasm.cpp -std=c++23 -Iinclude -O2 --no-entry -sSTANDALONE_WASM=1 -Wl,--export=pose -Wl,--export=joints_ptr -o web/tinyik-cpp.wasm
+      - name: Build Rust WebAssembly
+        run: |
+          rustup target add wasm32-unknown-unknown
+          python3 scripts/build-web.py
+      - run: node tests/wasm.mjs
+      - run: node tests/browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: build/screenshots
+      - uses: actions/configure-pages@v5
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          path: web
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: [native, browser]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

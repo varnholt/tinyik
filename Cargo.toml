@@ -1,0 +1,22 @@
+[package]
+name = "tinyik"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+description = "Small dependency-free inverse kinematics: two-bone IK and FABRIK"
+license = "MIT"
+repository = "https://github.com/varnholt/tinyik"
+readme = "rust/README.md"
+include = ["rust/src/**", "rust/examples/**", "rust/README.md", "LICENSE", "Cargo.toml"]
+
+[lib]
+path = "rust/src/lib.rs"
+crate-type = ["rlib", "cdylib"]
+
+[[example]]
+name = "parity"
+path = "rust/examples/parity.rs"
+
+[profile.release]
+lto = true
+opt-level = "s"

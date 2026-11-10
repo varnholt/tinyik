@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tinyik · Little giraffe</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header><div><p class="eyebrow">TINYIK · INVERSE KINEMATICS</p><h1>Little giraffe</h1></div><label class="core-label">Core <select id="core" aria-label="Simulation core"><option value="rust">Rust</option><option value="cpp">C++23</option></select></label></header>
+    <div class="scene">
+      <canvas id="scene" aria-label="Interactive wooden giraffe. Drag to rotate the camera."></canvas>
+      <span class="hint">Drag to look around</span>
+      <p id="error" role="alert" hidden></p>
+    </div>
+    <section class="controls" aria-label="Giraffe controls">
+      <label class="lean">Lean <input id="lean" type="range" min="-1" max="1" step="0.01" value="0"><output id="lean-value" for="lean">0%</output></label>
+      <button id="press" type="button" aria-pressed="false">Press base</button>
+      <label class="strings"><input id="strings" type="checkbox"> Show strings</label>
+    </section>
+    <footer><a href="https://github.com/varnholt/tinyik">tinyik · source</a><span>Two-bone IK + FABRIK · OpenGL ES 3.0 SDF</span></footer>
+  </main>
+  <script src="wasm.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

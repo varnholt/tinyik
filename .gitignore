@@ -1,0 +1,8 @@
+/build/
+/target/
+/.tools/
+web/tinyik-rust.wasm
+web/tinyik-cpp.wasm
+*.obj
+*.exe
+__pycache__/
