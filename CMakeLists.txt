@@ -1,28 +1,42 @@
 cmake_minimum_required(VERSION 3.25)
-project(tinyik VERSION 0.1.0 LANGUAGES CXX)
+project(
+    tinyik
+    VERSION 0.1.0
+    LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 add_library(tinyik INTERFACE)
 add_library(tinyik::tinyik ALIAS tinyik)
 target_compile_features(tinyik INTERFACE cxx_std_23)
-target_include_directories(tinyik INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_include_directories(tinyik INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                                            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 option(TINYIK_BUILD_TESTS "Build tests" ${PROJECT_IS_TOP_LEVEL})
 option(TINYIK_BUILD_EXAMPLES "Build examples" ${PROJECT_IS_TOP_LEVEL})
 if(TINYIK_BUILD_TESTS)
-  enable_testing()
-  add_executable(tinyik_tests tests/core.cpp)
-  target_link_libraries(tinyik_tests PRIVATE tinyik::tinyik)
-  add_test(NAME core COMMAND tinyik_tests)
+    enable_testing()
+    add_executable(tinyik_tests tests/core.cpp)
+    target_link_libraries(tinyik_tests PRIVATE tinyik::tinyik)
+    add_test(NAME core COMMAND tinyik_tests)
 endif()
 if(TINYIK_BUILD_EXAMPLES)
-  add_executable(tinyik_example examples/arm.cpp)
-  target_link_libraries(tinyik_example PRIVATE tinyik::tinyik)
-  add_executable(tinyik_parity tests/parity.cpp)
-  target_link_libraries(tinyik_parity PRIVATE tinyik::tinyik)
+    add_executable(tinyik_example examples/arm.cpp)
+    target_link_libraries(tinyik_example PRIVATE tinyik::tinyik)
+    add_executable(tinyik_parity tests/parity.cpp)
+    target_link_libraries(tinyik_parity PRIVATE tinyik::tinyik)
 endif()
 install(TARGETS tinyik EXPORT tinyikTargets)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(EXPORT tinyikTargets NAMESPACE tinyik:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinyik)
-configure_package_config_file(cmake/tinyikConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/tinyikConfig.cmake INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinyik)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/tinyikConfigVersion.cmake VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/tinyikConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/tinyikConfigVersion.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinyik)
+install(
+    EXPORT tinyikTargets
+    NAMESPACE tinyik::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinyik)
+configure_package_config_file(
+    cmake/tinyikConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/tinyikConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinyik)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/tinyikConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/tinyikConfig.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/tinyikConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinyik)
