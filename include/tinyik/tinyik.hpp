@@ -111,10 +111,14 @@ inline Vec3 constrain(Vec3 direction, Vec3 previous, BendLimit limit, Vec3 pole)
    const double angle = std::acos(std::clamp(dot(previous, direction), -1.0, 1.0));
    const double allowed = std::clamp(angle, limit.min_angle, limit.max_angle);
    if (std::abs(angle - allowed) < 1e-12)
+   {
       return direction;
+   }
    Vec3 bend = direction - previous * dot(direction, previous);
    if (length(bend) < 1e-10)
+   {
       bend = perpendicular(previous, pole);
+   }
    return previous * std::cos(allowed) + unit(bend) * std::sin(allowed);
 }
 }  // namespace detail
@@ -124,11 +128,17 @@ inline Vec3 constrain(Vec3 direction, Vec3 previous, BendLimit limit, Vec3 pole)
 inline std::expected<TwoBoneResult, Error> two_bone(Vec3 root, Vec3 target, Vec3 pole, double first, double second, BendLimit limit = {})
 {
    if (!detail::valid_point(root) || !detail::valid_point(target) || !detail::valid_point(pole))
+   {
       return std::unexpected(Error::invalid_input);
+   }
    if (!detail::valid_length(first) || !detail::valid_length(second))
+   {
       return std::unexpected(Error::invalid_lengths);
+   }
    if (!detail::valid_limit(limit))
+   {
       return std::unexpected(Error::invalid_limits);
+   }
    const double requested = length(target - root);
    const Vec3 axis = unit(target - root);
    const Vec3 bend = detail::perpendicular(axis, pole - root);
@@ -138,7 +148,9 @@ inline std::expected<TwoBoneResult, Error> two_bone(Vec3 root, Vec3 target, Vec3
    const double reach = std::sqrt(std::max(0.0, first * first + second * second + 2 * first * second * std::cos(allowed)));
    Vec3 middle;
    if (reach < 1e-10)
+   {
       middle = root + bend * first;
+   }
    else
    {
       const double along = (reach * reach + first * first - second * second) / (2 * reach);
@@ -149,7 +161,9 @@ inline std::expected<TwoBoneResult, Error> two_bone(Vec3 root, Vec3 target, Vec3
    const double error = length(tip - target);
    Status status = Status::converged;
    if (error > 1e-7)
+   {
       status = std::abs(angle - allowed) > 1e-10 ? Status::limited : Status::unreachable;
+   }
    return TwoBoneResult{{root, middle, tip}, {status, error, 0}};
 }
 
@@ -160,21 +174,44 @@ inline std::expected<Result, Error>
 fabrik(std::span<Vec3> joints, std::span<const double> lengths, Vec3 target, Options options = {}, std::span<const BendLimit> limits = {})
 {
    if (joints.size() < 2 || lengths.size() != joints.size() - 1 || !detail::valid_point(target))
+   {
       return std::unexpected(Error::invalid_input);
+   }
+
    for (Vec3 p : joints)
+   {
       if (!detail::valid_point(p))
+      {
          return std::unexpected(Error::invalid_input);
+      }
+   }
+
    for (double n : lengths)
+   {
       if (!detail::valid_length(n))
+      {
          return std::unexpected(Error::invalid_lengths);
+      }
+   }
+
    if (!limits.empty() && limits.size() != joints.size() - 2)
+   {
       return std::unexpected(Error::invalid_limits);
+   }
+
    for (auto limit : limits)
+   {
       if (!detail::valid_limit(limit))
+      {
          return std::unexpected(Error::invalid_limits);
+      }
+   }
+
    if (!std::isfinite(options.tolerance) || options.tolerance <= 0 || options.tolerance > 1e6 || options.max_iterations == 0 ||
        options.max_iterations > 10000 || !detail::valid_point(options.pole))
+   {
       return std::unexpected(Error::invalid_options);
+   }
 
    const Vec3 root = joints.front();
    const std::size_t last = joints.size() - 1;
@@ -211,7 +248,9 @@ fabrik(std::span<Vec3> joints, std::span<const double> lengths, Vec3 target, Opt
    {
       const Vec3 offset = joints[i] - root;
       if (length(offset - axis * dot(offset, axis)) > 1e-8)
+      {
          collinear = false;
+      }
    }
    if (collinear && distance < total)
    {
@@ -226,18 +265,24 @@ fabrik(std::span<Vec3> joints, std::span<const double> lengths, Vec3 target, Opt
    {
       joints[last] = target;
       for (std::size_t i = last; i > 0; --i)
+      {
          joints[i - 1] = joints[i] + unit(joints[i - 1] - joints[i]) * lengths[i - 1];
+      }
       joints[0] = root;
       for (std::size_t i = 1; i <= last; ++i)
       {
          Vec3 direction = unit(joints[i] - joints[i - 1]);
          if (i > 1 && !limits.empty())
+         {
             direction = detail::constrain(direction, unit(joints[i - 1] - joints[i - 2]), limits[i - 2], options.pole);
+         }
          joints[i] = joints[i - 1] + direction * lengths[i - 1];
       }
       const double error = length(joints[last] - target);
       if (error <= options.tolerance)
+      {
          return Result{Status::converged, error, iteration};
+      }
    }
    return Result{unreachable ? Status::unreachable : Status::iteration_limit, length(joints[last] - target), options.max_iterations};
 }

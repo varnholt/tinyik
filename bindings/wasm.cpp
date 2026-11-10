@@ -14,7 +14,9 @@ extern "C"
    int pose(double lean, double press)
    {
       if (!std::isfinite(lean) || !std::isfinite(press))
+      {
          return 0;
+      }
       const auto joints = giraffe_pose(lean, press);
       for (std::size_t i = 0; i < joints.size(); ++i)
       {

@@ -41,7 +41,9 @@ int main()
       check(r && r->status == Status::converged);
       near(length(joints.front()), 0);
       for (std::size_t i = 1; i < joints.size(); ++i)
+      {
          near(length(joints[i] - joints[i - 1]), 1);
+      }
    }
    std::array<Vec3, 4> joints{Vec3{}, Vec3{0, 1, 0}, Vec3{0, 2, 0}, Vec3{0, 3, 0}};
    const std::array<double, 3> lengths{1, 1, 1};
@@ -58,10 +60,14 @@ int main()
    std::array<double, 3> bad{1, -1, 1};
    check(!fabrik(joints, bad, {0, 1, 0}));
    for (std::size_t i = 0; i < 4; ++i)
+   {
       near(length(saved[i] - joints[i]), 0);
+   }
    check(!fabrik(joints, lengths, {std::numeric_limits<double>::quiet_NaN(), 0, 0}));
    for (std::size_t i = 0; i < 4; ++i)
+   {
       near(length(saved[i] - joints[i]), 0);
+   }
    r = fabrik(joints, lengths, {10, 0, 0});
    check(r && r->status == Status::unreachable);
    near(r->error, 7);
@@ -72,6 +78,7 @@ int main()
    near(r->error, 1);
    // A range of reachable 3D targets must preserve the fixed root and lengths.
    for (int x = -5; x <= 5; ++x)
+   {
       for (int y = -5; y <= 5; ++y)
       {
          std::array<Vec3, 5> chain{Vec3{}, Vec3{0, 0.5, 0}, Vec3{0, 1, 0}, Vec3{0, 1.5, 0}, Vec3{0, 2, 0}};
@@ -80,8 +87,11 @@ int main()
          check(result.has_value());
          near(length(chain[0]), 0);
          for (std::size_t i = 1; i < chain.size(); ++i)
+         {
             near(length(chain[i] - chain[i - 1]), 0.5);
+         }
          near(result->error, length(chain.back() - Vec3{x * 0.2, y * 0.2, 0.3}));
       }
+   }
    std::cout << "IK invariants, degeneracies, constraints and invalid-input rollback passed.\n";
 }
