@@ -71,11 +71,15 @@ installs the header and a `find_package(tinyik CONFIG REQUIRED)` package.
 
 ## Rust
 
-The crate is in this repository; it has not been published to crates.io.
+Install the dependency-free [crate](https://crates.io/crates/tinyik):
+
+```sh
+cargo add tinyik
+```
 
 ```toml
 [dependencies]
-tinyik = { git = "https://github.com/varnholt/tinyik", tag = "v0.1.0" }
+tinyik = "0.1"
 ```
 
 ```rust
