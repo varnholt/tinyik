@@ -30,6 +30,9 @@ jobs:
           cmake --build build/consumer --config Release
   browser:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,9 +60,17 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
           path: web
+  rust-msrv:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Rust 1.85
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal
+          cargo +1.85.0 test --locked
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: [native, browser]
+    needs: [native, browser, rust-msrv]
     runs-on: ubuntu-latest
     permissions:
       pages: write

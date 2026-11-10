@@ -6,6 +6,10 @@ rust-version = "1.85"
 description = "Small dependency-free inverse kinematics: two-bone IK and FABRIK"
 license = "MIT"
 repository = "https://github.com/varnholt/tinyik"
+homepage = "https://varnholt.github.io/tinyik/"
+documentation = "https://docs.rs/tinyik"
+keywords = ["inverse-kinematics", "ik", "fabrik", "animation", "gamedev"]
+categories = ["algorithms", "mathematics", "game-development"]
 readme = "rust/README.md"
 include = ["rust/src/**", "rust/examples/**", "rust/README.md", "LICENSE", "Cargo.toml"]
 
