@@ -28,7 +28,7 @@ if(!process.env.CDP_PORT) {
 let socket;
 try {
   let tab;
-  for(let i=0;i<100;i++) {
+  for(let i=0;i<300;i++) { // Cold Chrome starts on shared CI runners can exceed ten seconds.
     try {tab=await(await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(site)}`,{method:'PUT'})).json();break;}
     catch {await pause(100);}
   }
