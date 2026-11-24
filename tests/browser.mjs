@@ -84,7 +84,7 @@ try {
   await waitFor(`testNecks.length>3 && Math.max(...testNecks)-Math.min(...testNecks)>0.1`,300);
   await run(`[...document.querySelectorAll('button')].find(b=>b.textContent==='Stop music').click();`);
   const rest=(await run(`(async()=>Array.from((await loadTinyIK('rust')).makePose(0,0)))()`))[48];
-  await waitFor(`Math.abs(testNecks.at(-1)-${rest})<0.005`);
+  await waitFor(`Math.abs(testNecks.at(-1)-${rest})<0.005`,300);
   await send('Emulation.setDeviceMetricsOverride',{width:375,height:812,deviceScaleFactor:1,mobile:true});
   await pause(200);
   assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'));

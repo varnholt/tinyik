@@ -103,7 +103,7 @@ window.createGiraffeDance = function () {
   return {
     // Returns null when idle, otherwise lean/bounce offsets and a neck pitch.
     sample() {
-      const now = performance.now()/1000, dt = Math.min(now-last,0.1);
+      const now = performance.now()/1000, dt = Math.min(now-last,0.25);
       last = now;
       const time = context ? (context.getOutputTimestamp?.().contextTime || context.currentTime-context.baseLatency) : 0;
       const motion = playing && !reducedMotion ? giraffeDanceMotion(clock,time) : null;
