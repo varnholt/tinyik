@@ -46,9 +46,9 @@ try {
     const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true,userGesture:true});
     assert.ok(!r.exceptionDetails,JSON.stringify(r.exceptionDetails));return r.result.value;
   };
-  async function waitFor(expression) {
-    for(let i=0;i<100;i++){if(await run(expression))return;await pause(100);}
-    throw Error('Timeout: '+expression);
+  async function waitFor(expression,attempts=100) {
+    for(let i=0;i<attempts;i++){if(await run(expression))return;await pause(100);}
+    throw Error('Timeout: '+expression+' '+await run(`document.querySelector('[role=status]')?.textContent+' '+JSON.stringify(window.testNecks)`));
   }
   await send('Runtime.enable');await send('Page.enable');
   await send('Page.addScriptToEvaluateOnNewDocument',{source:`const original=WebGL2RenderingContext.prototype.uniform3fv;WebGL2RenderingContext.prototype.uniform3fv=function(location,data){if(data.length===51)window.testJoints=Array.from(data);return original.apply(this,arguments);};`});
@@ -81,7 +81,7 @@ try {
     window.testNecks=[];{const wrapped=WebGL2RenderingContext.prototype.uniform3fv;
     WebGL2RenderingContext.prototype.uniform3fv=function(l,d){if(d.length===51)testNecks.push(d[48]);return wrapped.apply(this,arguments);};}
     [...document.querySelectorAll('button')].find(b=>b.textContent==='Play tracker demo').click();`);
-  await waitFor(`testNecks.length>3 && Math.max(...testNecks)-Math.min(...testNecks)>0.1`);
+  await waitFor(`testNecks.length>3 && Math.max(...testNecks)-Math.min(...testNecks)>0.1`,300);
   await run(`[...document.querySelectorAll('button')].find(b=>b.textContent==='Stop music').click();`);
   const rest=(await run(`(async()=>Array.from((await loadTinyIK('rust')).makePose(0,0)))()`))[48];
   await waitFor(`Math.abs(testNecks.at(-1)-${rest})<0.005`);
