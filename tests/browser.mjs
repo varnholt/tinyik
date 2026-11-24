@@ -43,7 +43,7 @@ try {
   };
   const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++next;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}));});
   const run=async expression=>{
-    const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
+    const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true,userGesture:true});
     assert.ok(!r.exceptionDetails,JSON.stringify(r.exceptionDetails));return r.result.value;
   };
   async function waitFor(expression) {
@@ -76,6 +76,15 @@ try {
     assert.equal(await run('document.querySelector("#error").hidden'),true);
     await capture('cpp');
   }
+  // Optional web/dance demo: the libopenmpt worklet's row clock drives the neck.
+  await run(`document.querySelector('#lean').value='0';document.querySelector('#lean').dispatchEvent(new Event('input'));
+    window.testNecks=[];{const wrapped=WebGL2RenderingContext.prototype.uniform3fv;
+    WebGL2RenderingContext.prototype.uniform3fv=function(l,d){if(d.length===51)testNecks.push(d[48]);return wrapped.apply(this,arguments);};}
+    [...document.querySelectorAll('button')].find(b=>b.textContent==='Play tracker demo').click();`);
+  await waitFor(`testNecks.length>3 && Math.max(...testNecks)-Math.min(...testNecks)>0.1`);
+  await run(`[...document.querySelectorAll('button')].find(b=>b.textContent==='Stop music').click();`);
+  const rest=(await run(`(async()=>Array.from((await loadTinyIK('rust')).makePose(0,0)))()`))[48];
+  await waitFor(`Math.abs(testNecks.at(-1)-${rest})<0.005`);
   await send('Emulation.setDeviceMetricsOverride',{width:375,height:812,deviceScaleFactor:1,mobile:true});
   await pause(200);
   assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'));

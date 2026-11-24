@@ -116,6 +116,13 @@ selector switches between C++ and Rust WASM using the same GLSL ES 3.00 shader.
 The shader draws rounded wooden pieces between supplied joints; it does not
 solve IK. The seven visible neck beads follow a four-link neck chain.
 
+The optional dance demo in `web/dance/` plays tracker modules (MOD, XM, S3M, IT)
+with libopenmpt and nods the neck on every beat of the module's row clock.
+Deleting that folder, `tests/dance.mjs`, `scripts/create-dance-demo.mjs` and the
+lines mentioning `dance` in `web/app.js`, `web/index.html`, `tests/browser.mjs`
+and the CI workflow removes it completely. Third-party notices are in
+`web/dance/vendor/NOTICE.txt`.
+
 To build the Rust core locally:
 
 ```sh
