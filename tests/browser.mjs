@@ -28,7 +28,7 @@ if(!process.env.CDP_PORT) {
 let socket;
 try {
   let tab;
-  for(let i=0;i<100;i++) {
+  for(let i=0;i<300;i++) { // Cold Chrome starts on shared CI runners can exceed ten seconds.
     try {tab=await(await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(site)}`,{method:'PUT'})).json();break;}
     catch {await pause(100);}
   }
@@ -43,12 +43,12 @@ try {
   };
   const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++next;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}));});
   const run=async expression=>{
-    const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
+    const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true,userGesture:true});
     assert.ok(!r.exceptionDetails,JSON.stringify(r.exceptionDetails));return r.result.value;
   };
-  async function waitFor(expression) {
-    for(let i=0;i<100;i++){if(await run(expression))return;await pause(100);}
-    throw Error('Timeout: '+expression);
+  async function waitFor(expression,attempts=100) {
+    for(let i=0;i<attempts;i++){if(await run(expression))return;await pause(100);}
+    throw Error('Timeout: '+expression+' '+await run(`document.querySelector('[role=status]')?.textContent+' '+JSON.stringify(window.testNecks)`));
   }
   await send('Runtime.enable');await send('Page.enable');
   await send('Page.addScriptToEvaluateOnNewDocument',{source:`const original=WebGL2RenderingContext.prototype.uniform3fv;WebGL2RenderingContext.prototype.uniform3fv=function(location,data){if(data.length===51)window.testJoints=Array.from(data);return original.apply(this,arguments);};`});
@@ -76,6 +76,15 @@ try {
     assert.equal(await run('document.querySelector("#error").hidden'),true);
     await capture('cpp');
   }
+  // Optional web/dance demo: the libopenmpt worklet's row clock drives the neck.
+  await run(`document.querySelector('#lean').value='0';document.querySelector('#lean').dispatchEvent(new Event('input'));
+    window.testNecks=[];{const wrapped=WebGL2RenderingContext.prototype.uniform3fv;
+    WebGL2RenderingContext.prototype.uniform3fv=function(l,d){if(d.length===51)testNecks.push(d[48]);return wrapped.apply(this,arguments);};}
+    [...document.querySelectorAll('button')].find(b=>b.textContent==='Play tracker demo').click();`);
+  await waitFor(`testNecks.length>3 && Math.max(...testNecks)-Math.min(...testNecks)>0.1`,300);
+  await run(`[...document.querySelectorAll('button')].find(b=>b.textContent==='Stop music').click();`);
+  const rest=(await run(`(async()=>Array.from((await loadTinyIK('rust')).makePose(0,0)))()`))[48];
+  await waitFor(`Math.abs(testNecks.at(-1)-${rest})<0.005`,300);
   await send('Emulation.setDeviceMetricsOverride',{width:375,height:812,deviceScaleFactor:1,mobile:true});
   await pause(200);
   assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'));

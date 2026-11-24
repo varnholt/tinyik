@@ -42,6 +42,7 @@
     const lean = document.getElementById('lean');
     const press = document.getElementById('press');
     const strings = document.getElementById('strings');
+    const dance = window.createGiraffeDance?.(); // Optional demo in web/dance/.
     let pressed = false;
     let amount = 0;
     let velocity = 0;
@@ -92,7 +93,9 @@
     function frame(now) {
       const dt = Math.min((now-previous)/1000,1.0);
       previous = now;
-      const target = pressed ? 1 : 0;
+      const move = dance?.sample();
+      if (move) dirty = true;
+      const target = pressed ? 1 : move ? move.bounce : 0;
       const moving = Math.abs(target-amount)>0.0001 || Math.abs(velocity)>0.0001;
       if (moving) {
         // Exact damped-spring solution: the return speed does not depend on FPS.
@@ -116,7 +119,8 @@
         gl.viewport(0,0,width,height);
         gl.uniform2f(locations.resolution,width,height);
         gl.uniform2f(locations.orbit,yaw,elevation);
-        const pose = solver.makePose(Number(lean.value),amount);
+        const pose = solver.makePose(Math.max(-1,Math.min(1,Number(lean.value)+(move ? move.lean : 0))),amount);
+        if (move) dance.bendNeck(pose,move.neck);
         gl.uniform3fv(locations.joints,pose);
         gl.uniform1f(locations.press,Math.max(0,Math.min(1,amount)));
         gl.uniform1i(locations.strings,strings.checked ? 1 : 0);
